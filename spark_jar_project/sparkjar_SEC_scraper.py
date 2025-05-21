@@ -48,6 +48,7 @@ company_filings = data['filings']['recent']
 
 filing_urls = []
 
+# loop through the filings and extract the URLs for 10-K forms
 for accession_no, form_type in zip(company_filings['accessionNumber'], company_filings['form']):
     if form_type == '10-K':  
         acc_no_formatted = accession_no.replace('-', '')
@@ -86,9 +87,33 @@ def clean_text(text):
     clean = soup.get_text(separator=' ', strip=True)
     
     return clean
-    
-print(clean_text(item_1_text))
 
+item_1_text = clean_text(item_1_text)
+
+def tokenize_text(text):
+    '''
+    Tokenizes text into sentences and words.
+    
+    Parameters
+    ----------
+    text : str
+        Text from a 10-k item.
+
+    Returns
+    -------
+    sentences : list
+        List of sentences.
+    words : list
+        List of words.
+    '''
+    # split text into sentences
+    sentences = text.split('. ')
+    
+    # split each sentence into words
+    words = [sentence.split() for sentence in sentences]
+    
+    return sentences, words
+print(tokenize_text(item_1_text))
 
 
 
