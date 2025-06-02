@@ -1,0 +1,77 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+import pandas as pd
+
+# Step 1: Pull filing URL
+CIK = '0001318605'  # Tesla
+url = f'https://data.sec.gov/submissions/CIK{CIK}.json'
+headers = {'User-Agent': 'bridgetcrampton117@gmail.com'}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+base_url = 'https://www.sec.gov/Archives/edgar/data'
+filing_urls = []
+
+for accession_no, form_type in zip(data['filings']['recent']['accessionNumber'], data['filings']['recent']['form']):
+    if form_type == '10-K':
+        acc_no_nodashes = accession_no.replace('-', '')
+        filing_url = f"{base_url}/{CIK}/{acc_no_nodashes}/{accession_no}.txt"
+        filing_urls.append(filing_url)
+
+# Step 2: Fetch raw filing text
+r = requests.get(filing_urls[0], headers=headers)
+raw_10k = r.text
+
+# Step 3: Parse document sections
+doc_start_pattern = re.compile(r'<DOCUMENT>')
+doc_end_pattern = re.compile(r'</DOCUMENT>')
+type_pattern = re.compile(r'<TYPE>[^\n]+')
+
+doc_start_is = [x.end() for x in doc_start_pattern.finditer(raw_10k)]
+doc_end_is = [x.start() for x in doc_end_pattern.finditer(raw_10k)]
+doc_types = [x[len('<TYPE>'):] for x in type_pattern.findall(raw_10k)]
+
+document = {}
+for doc_type, doc_start, doc_end in zip(doc_types, doc_start_is, doc_end_is):
+    normalized_type = doc_type.strip().upper()
+    if normalized_type.startswith('10-K'):
+        document['10-K'] = raw_10k[doc_start:doc_end]
+
+# Step 4: Find "Item" sections using regex
+regex = re.compile(r'item\s*(1a|1b|1|7a|7|8)', re.IGNORECASE)
+matches = list(regex.finditer(document['10-K']))
+
+# Step 5: Create DataFrame of matches
+test_df = pd.DataFrame([(x.group(), x.start(), x.end()) for x in matches], columns=['item', 'start', 'end'])
+test_df['item'] = test_df['item'].str.lower()
+test_df.replace({'&#160;': '', '&nbsp;': '', ' ': '', '\.': '', '>': ''}, regex=True, inplace=True)
+
+# Step 6: Manually assign best match positions for Items 1, 1A, and 1B
+pos_dat = pd.DataFrame({
+    'item': ['item1', 'item1a', 'item1b'],
+    'start': [209163, 210447, 211737],
+    'end': [209169, 210454, 211744]
+}).set_index('item')
+
+# Step 7: Extract sections using assigned positions
+item_1_raw = document['10-K'][pos_dat['start'].loc['item1']:pos_dat['start'].loc['item1a']]
+item_1a_raw = document['10-K'][pos_dat['start'].loc['item1a']:pos_dat['start'].loc['item1b']]
+
+# Fallback for Item 7 using regex match
+item_7_match = test_df[test_df['item'] == 'item7'].iloc[-1]
+item_7a_match = test_df[test_df['item'] == 'item7a'].iloc[-1]
+item_7_raw = document['10-K'][item_7_match['start']:item_7a_match['start']]
+
+# Step 8: Clean text with BeautifulSoup
+item_1 = BeautifulSoup(item_1_raw, 'lxml').get_text("\n\n")
+item_1a = BeautifulSoup(item_1a_raw, 'lxml').get_text("\n\n")
+item_7 = BeautifulSoup(item_7_raw, 'lxml').get_text("\n\n")
+
+# Step 9: Print output
+print("--- ITEM 1 ---\n")
+print(item_1[:1500])
+print("\n--- ITEM 1A ---\n")
+print(item_1a[:1500])
+print("\n--- ITEM 7 ---\n")
+print(item_7[:1500])
