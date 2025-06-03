@@ -8,7 +8,7 @@ The **SEC Risk Agent** extracts key sections from SEC 10-K filings (Item 1, 1A, 
 
 ### 🔧 Technologies & Tools
 - Python (requests, BeautifulSoup)
-- SEC EDGAR API / Web Scraping
+- Web Scraping
 - Vertex AI GenAI API (text summarization, risk extraction)
 - Google Agent Development Kit (ADK)
 - lovable.dev (low-code frontend)
