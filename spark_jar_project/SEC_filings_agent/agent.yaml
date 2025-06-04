@@ -1,0 +1,3 @@
+name: filings_agent
+description: Extract and summarize 10-K SEC filings for a given company.
+entry_point: agent.py

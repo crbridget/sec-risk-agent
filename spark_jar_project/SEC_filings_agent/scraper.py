@@ -5,6 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def scrape_sec_filings(company_name: str, max_filings=1):
     """
@@ -13,7 +16,7 @@ def scrape_sec_filings(company_name: str, max_filings=1):
     Returns: List of file paths to extracted text sections (Item 1, 1A, 7)
     """
     output_files = []
-    headers = {'User-Agent': 'bridgetcrampton117@gmail.com'}
+    headers = {'User-Agent': os.getenv("SEC_USER_AGENT")}
 
     # Step 1: Get CIK
     cik_url = "https://www.sec.gov/files/company_tickers.json"
