@@ -6,7 +6,7 @@ from summarize import summarize_filing_texts
 root_agent = Agent(
     name="filings_agent",
     model="gemini-2.0-flash",
-    description="Tool agent",
+    description="Filings agent",
     instruction="""
     You are a helpful assistant that can use the following tools:
     - scraper: Get recent 10-K filings for a company and extract specific items.
