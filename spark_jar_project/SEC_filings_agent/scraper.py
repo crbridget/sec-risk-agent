@@ -6,15 +6,14 @@ from bs4 import BeautifulSoup
 import re
 import pandas as pd
 from dotenv import load_dotenv
-from requests.adapters import HTTPAdapter, Retry
+from requests.adapters import Retry
+import time
 
 load_dotenv()
 
-def scrape_sec_filings(company_name: str, max_filings=1):
+def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
     """
-    Scrapes recent 10-K filings from SEC EDGAR for a given company name.
-    
-    Returns: List of file paths to extracted text sections (Item 1, 1A, 7)
+    Scrapes recent 10-K filings from SEC EDGAR for a given company CIK.
     """
     output_files = []
 
@@ -24,32 +23,22 @@ def scrape_sec_filings(company_name: str, max_filings=1):
     backoff_factor=1.0,          # delay between retries: 1s, 2s, 4s, ...
     status_forcelist=[429, 500, 502, 503, 504],
     allowed_methods=["GET"]
-)
-    session.mount('https://', requests.adapters.HTTPAdapter(max_retries=retries)) # 
+    )
+    
+    headers = {'User-Agent': os.getenv("SEC_USER_AGENT")}
+
+    session.mount('https://', requests.adapters.HTTPAdapter(max_retries=retries))
     session.mount('http://', requests.adapters.HTTPAdapter(max_retries=retries))
     session.headers.update(headers)
 
-    headers = {'User-Agent': os.getenv("SEC_USER_AGENT")}
-
     def fetch_with_retries(url):
         """Fetch a URL with retries and a timeout."""
-        response = session.get(url, headers=HEADERS, timeout=30)
+        response = session.get(url, headers=headers, timeout=30)
         response.raise_for_status()
         time.sleep(1)                 # brief delay to respect SEC servers
-        return response.text
+        return response
 
-    # Fetch CIK from SEC's company tickers JSON
-    cik_url = "https://www.sec.gov/files/company_tickers.json"
-    response = fetch_with_retries(cik_url)
-    data = response.json()
-    for entry in data.values():
-        if entry['title'].lower() == company_name.lower():
-            CIK = str(entry['cik_str']).zfill(10)
-            break
-    else:
-        raise ValueError(f"CIK not found for company: {company_name}")
-
-    # Step 2: Fetch recent filings
+    # Step 1: Fetch recent filings
     sub_url = f'https://data.sec.gov/submissions/CIK{CIK}.json'
     response = fetch_with_retries(sub_url)
     data = response.json()
@@ -62,10 +51,10 @@ def scrape_sec_filings(company_name: str, max_filings=1):
             acc_no_nodashes = accession_no.replace('-', '')
             filing_url = f"{base_url}/{int(CIK)}/{acc_no_nodashes}/{accession_no}.txt"
             filing_urls.append((accession_no, filing_url))
-        if len(filing_urls) >= max_filings:
+        if len(filing_urls) >= max_filings: # maximum number of filings to scrape is 5
             break
 
-    os.makedirs("output", exist_ok=True)
+    os.makedirs("output", exist_ok=True) # create output directory if it doesn't already exist
     regex = re.compile(r'item\s*(1a|1b|1|7a|7|8)[\.\:\s]', re.IGNORECASE)
 
     for accession_no, url in filing_urls:
@@ -115,8 +104,3 @@ def scrape_sec_filings(company_name: str, max_filings=1):
                 output_files.append(path)
             except KeyError:
                 continue
-
-    return output_files
-
-
-load_dotenv(1090872)

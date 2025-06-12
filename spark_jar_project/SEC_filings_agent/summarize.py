@@ -7,11 +7,12 @@ from google.genai.types import HttpOptions
 # Load environment variables from .env file
 load_dotenv()
 
+os.environ["GOOGLE_CLOUD_PROJECT"] = os.getenv("GOOGLE_CLOUD_PROJECT")
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.getenv("GOOGLE_CLOUD_LOCATION")
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true" 
+
 client = genai.Client(
-    http_options=HttpOptions(api_version="v1"),
-    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-    location=os.getenv("GOOGLE_CLOUD_LOCATION"),
-    use_vertex_ai=os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "True") == "True"
+    http_options=HttpOptions(api_version="v1")
 )
 
 def summarize_filing_texts(file_paths: List[str]) -> str:
