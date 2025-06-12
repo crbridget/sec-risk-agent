@@ -38,7 +38,7 @@ def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
         time.sleep(1)                 # brief delay to respect SEC servers
         return response
 
-    # Step 1: Fetch recent filings
+    # Fetch recent filings
     sub_url = f'https://data.sec.gov/submissions/CIK{CIK}.json'
     response = fetch_with_retries(sub_url)
     data = response.json()
@@ -56,7 +56,8 @@ def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
 
     os.makedirs("output", exist_ok=True) # create output directory if it doesn't already exist
     regex = re.compile(r'item\s*(1a|1b|1|7a|7|8)[\.\:\s]', re.IGNORECASE)
-
+ 
+    # Extraxt and process each filing
     for accession_no, url in filing_urls:
         r = fetch_with_retries(url)
         raw_10k = r.text
