@@ -92,7 +92,6 @@ def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
 
         sections = {
             "item1": ("item1", "item1a"),
-            "item1a": ("item1a", "item1b"),
             "item7": ("item7", "item7a")
         }
 
@@ -105,3 +104,6 @@ def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
                 output_files.append(path)
             except KeyError:
                 continue
+
+scrape_sec_filings("0000320193", max_filings=5)  # Example CIK for Apple Inc.
+
