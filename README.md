@@ -4,26 +4,13 @@ This project is part of a multi-week internship curriculum focused on building i
 
 ## 🔍 Overview
 
-The **SEC Risk Agent** extracts key sections from SEC 10-K filings (Item 1, 1A, and 7), cleans the raw text, and prepares it for analysis with Large Language Models (LLMs). It's designed to integrate with Google's Agent Development Kit (ADK) and the Vertex AI GenAI API, forming the backend of a web app built on [lovable.dev](https://www.lovable.dev).
+The **SEC Risk Agent** extracts key sections from SEC 10-K filings (Item 1 and 7), cleans the raw text, and prepares it for analysis with Large Language Models (LLMs). It's designed to integrate with Google's Agent Development Kit (ADK) and the Vertex AI GenAI API.
 
 ### 🔧 Technologies & Tools
 - Python (requests, BeautifulSoup)
 - Web Scraping
 - Vertex AI GenAI API (text summarization, risk extraction)
 - Google Agent Development Kit (ADK)
-- lovable.dev (low-code frontend)
-
-## 📈 My Learning Journey
-
-As an intern, I’m following a structured, multi-week progression that includes:
-
-- **Week 1**: Learning about credit risk, SEC filings, and Python basics  
-- **Week 2**: Building scrapers and preprocessing data for LLMs  
-- **Week 3**: Prompt engineering and interacting with GenAI APIs  
-- **Week 4–5**: Developing agent tools using Google ADK for extracting risk factors  
-- **Week 6–7**: Designing and deploying a front-end web app on lovable.dev  
-
-Each phase builds toward a functioning pipeline that connects scraped regulatory data to a GenAI-powered backend, then visualizes the results in a user-friendly interface.
 
 ## 🛠 How to Run the Scraper
 
@@ -34,20 +21,37 @@ Each phase builds toward a functioning pipeline that connects scraped regulatory
    
 2. Install dependencies
    ```bash
-    pip install requests beautifulsoup4
+   pip install -r requirements.txt
+   pip install google-generativeai[adk]
 
-4. Run the Scraper
+3. Set Up Environment Variables
+Create a .env file inside your agent folder (e.g. SEC_filings_agent/.env) with the following:
    ```bash
-    python sparkjar_SEC_scraper.py
+   SEC_USER_AGENT=YourUserAgentHere
+   GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+   GOOGLE_CLOUD_LOCATION=us-central1
 
-📌 Future Steps
-Wrap text-processing tools as ADK agents
+   Replace the placeholders with your actual values. The SEC_USER_AGENT should be a contact string like:
+   ```bash
+   Bridget Crampton (your-email@example.com)
 
-Integrate GenAI output (summaries, sentiment, keyword extraction)
+4. Launch the Agent (Dev Mode)
+From the project root:
+```bash
+google-adk dev
 
-Build a lovable.dev frontend to input tickers and visualize results
+This will start the local ADK agent and open the UI at:
+```bash
+http://localhost:8000
 
-Connect stock sentiment data for deeper context
+6. Test the Agent
+In the chat window, try a prompt like:
+   ```bash
+   Get the latest 10-K filings for CIK 0001652044 and summarize them.
+
+The agent will:
+   Call scrape_sec_filings() to download key sections
+   Call summarize_filing_texts() to generate a detailed analysis
 
 👤 Author
 Bridget Crampton — intern exploring the intersection of finance, AI, and UI development.
