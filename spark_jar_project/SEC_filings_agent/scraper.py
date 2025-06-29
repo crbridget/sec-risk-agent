@@ -98,12 +98,13 @@ def scrape_sec_filings(CIK: str, max_filings: int = 5) -> list:
         for section, (start_key, end_key) in sections.items():
             try:
                 text = extract_item_text(pos_dat['start'].loc[start_key], pos_dat['start'].loc[end_key])
-                path = f"output/{accession_no}_{section}.txt"
+                path = os.path.abspath(f"output/{accession_no}_{section}.txt")
                 with open(path, "w") as f:
                     f.write(text)
                 output_files.append(path)
             except KeyError:
                 continue
 
-scrape_sec_filings("0000320193", max_filings=5)  # Example CIK for Apple Inc.
+    return output_files
+
 

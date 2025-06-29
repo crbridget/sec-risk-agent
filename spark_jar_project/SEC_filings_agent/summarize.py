@@ -15,15 +15,17 @@ client = genai.Client(
     http_options=HttpOptions(api_version="v1")
 )
 
-def summarize_filing_texts(file_paths: List[str]) -> str:
-    # Combine content from all input files
+def summarize_filing_texts(file_paths: list[str]) -> str:
     combined_content = ""
-    for path in file_paths:
-        with open(path, 'r', encoding='utf-8') as file:
-            file_content = file.read()
-            combined_content += f"\n\n--- {os.path.basename(path)} ---\n{file_content}"
 
-    # Trim to 20,000 characters for API limits
+    for path in file_paths:
+        try:
+            with open(path, 'r', encoding='utf-8') as file:
+                file_content = file.read()
+                combined_content += f"\n\n--- {os.path.basename(path)} ---\n{file_content}"
+        except FileNotFoundError:
+            combined_content += f"\n\n❌ Could not find file: {path}\n"
+
     trimmed_content = combined_content[:20000]
 
     prompt = f"""
@@ -51,4 +53,3 @@ Here is the text to analyze:
         return response.text[:20000]
     except Exception as e:
         return f"❌ Error summarizing content: {e}"
-
